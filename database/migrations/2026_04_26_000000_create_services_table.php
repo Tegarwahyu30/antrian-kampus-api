@@ -18,7 +18,7 @@ return new class extends Migration
     $table->text('description')->nullable();
     $table->boolean('status')->default(true);
     $table->timestamps(); // WAJIB
-});
+    });
     }
 
     /**
