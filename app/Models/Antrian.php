@@ -7,11 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 class Antrian extends Model
 {
     protected $fillable = [
-        'user_id',
+
+        'nama',
+
+        'nim',
+
+        'keperluan',
+
         'service_id',
+
         'queue_number',
+
         'queue_date',
+
         'status'
+
     ];
 
     public function service()

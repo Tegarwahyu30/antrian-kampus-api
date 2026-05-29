@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('antrians', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('user_id')->constrained()->onDelete('cascade');
     $table->foreignId('service_id')->constrained()->onDelete('cascade');
     $table->string('queue_number');
     $table->date('queue_date');
-    $table->enum('status', ['waiting', 'cancelled', 'done'])->default('waiting');
+    $table->enum('status', [
+    'waiting',
+    'process',
+    'done'
+])->default('waiting');
     $table->timestamps();
 });
     }

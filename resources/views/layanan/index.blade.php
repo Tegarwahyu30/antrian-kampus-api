@@ -81,18 +81,33 @@
             </td>
             <td>
 
-    <a href="/layanan/edit/{{ $service->id }}">
-        Edit
-    </a>
-
-    |
-
     <a
-        href="/layanan/delete/{{ $service->id }}"
-        onclick="return confirm('Yakin hapus layanan?')"
-    >
-        Delete
-    </a>
+    href="/layanan/edit/{{ $service->id }}"
+    style="
+        background:#2563eb;
+        color:white;
+        padding:8px 14px;
+        border-radius:8px;
+        text-decoration:none;
+        margin-right:5px;
+    "
+>
+    Edit
+</a>
+
+<a
+    href="/layanan/delete/{{ $service->id }}"
+    onclick="return confirm('Yakin hapus layanan?')"
+    style="
+        background:red;
+        color:white;
+        padding:8px 14px;
+        border-radius:8px;
+        text-decoration:none;
+    "
+>
+    Delete
+</a>
 
 </td>
 

@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="card" style="max-width:600px; margin:auto;">
+<div class="card" style="max-width:700px; margin:auto;">
 
     <h1>Edit Antrian</h1>
 
@@ -15,16 +15,60 @@
 
         @csrf
 
-        <label>Nomor Antrian</label>
+        <label>Nama Mahasiswa</label>
 
         <input
             type="text"
-            name="queue_number"
-            value="{{ $antrian->queue_number }}"
+            name="nama"
+            value="{{ $antrian->nama }}"
             required
         >
 
-        <label>Tanggal Antrian</label>
+        <label>NIM</label>
+
+        <input
+            type="text"
+            name="nim"
+            value="{{ $antrian->nim }}"
+            required
+        >
+
+        <label>Keperluan</label>
+
+        <textarea
+            name="keperluan"
+            rows="4"
+            style="
+                width:100%;
+                padding:10px;
+                margin-top:10px;
+                margin-bottom:20px;
+            "
+            required
+        >{{ $antrian->keperluan }}</textarea>
+
+        <label>Pilih Layanan</label>
+
+        <select name="service_id" required>
+
+            @foreach($services as $service)
+
+                <option
+                    value="{{ $service->id }}"
+                    @if($service->id == $antrian->service_id)
+                        selected
+                    @endif
+                >
+
+                    {{ $service->service_name }}
+
+                </option>
+
+            @endforeach
+
+        </select>
+
+        <label>Tanggal</label>
 
         <input
             type="date"
@@ -39,22 +83,39 @@
 
             <option
                 value="waiting"
-                {{ $antrian->status == 'waiting' ? 'selected' : '' }}
+                @if($antrian->status == 'waiting')
+                    selected
+                @endif
             >
                 Waiting
             </option>
 
             <option
+                value="process"
+                @if($antrian->status == 'process')
+                    selected
+                @endif
+            >
+                Process
+            </option>
+
+            <option
                 value="done"
-                {{ $antrian->status == 'done' ? 'selected' : '' }}
+                @if($antrian->status == 'done')
+                    selected
+                @endif
             >
                 Done
             </option>
 
         </select>
 
+        <br><br>
+
         <button class="btn" type="submit">
+
             Update
+
         </button>
 
     </form>
