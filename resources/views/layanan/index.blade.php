@@ -1,61 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Data Layanan</title>
+@extends('layouts.app')
 
-    <style>
-
-        body{
-            font-family: Arial;
-            background: #f4f4f4;
-            padding: 30px;
-        }
-
-        .container{
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        table{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table th,
-        table td{
-            border: 1px solid #ddd;
-            padding: 12px;
-        }
-
-        table th{
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn{
-            display: inline-block;
-            padding: 10px 15px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-
-    </style>
-</head>
-<body>
-
+@section('content')
 <div class="container">
 
     <h1>Data Layanan</h1>
 
     <br>
 
-    <a href="/layanan/create" class="btn">
-        + Tambah Layanan
-    </a>
+    <div style="margin-bottom: 20px;">
+        <a href="/layanan/create" class="btn">
+            + Tambah Layanan
+        </a>
+
+        <a href="/" class="btn" style="float: right;">
+            Kembali
+        </a>
+        
+        <div style="clear: both;"></div>
+    </div>
 
     <table>
 
@@ -81,35 +43,35 @@
             </td>
             <td>
 
-    <a
-    href="/layanan/edit/{{ $service->id }}"
-    style="
-        background:#2563eb;
-        color:white;
-        padding:8px 14px;
-        border-radius:8px;
-        text-decoration:none;
-        margin-right:5px;
-    "
->
-    Edit
-</a>
+                <a
+                    href="/layanan/edit/{{ $service->id }}"
+                    style="
+                        background:#2563eb;
+                        color:white;
+                        padding:8px 14px;
+                        border-radius:8px;
+                        text-decoration:none;
+                        margin-right:5px;
+                    "
+                >
+                    Edit
+                </a>
 
-<a
-    href="/layanan/delete/{{ $service->id }}"
-    onclick="return confirm('Yakin hapus layanan?')"
-    style="
-        background:red;
-        color:white;
-        padding:8px 14px;
-        border-radius:8px;
-        text-decoration:none;
-    "
->
-    Delete
-</a>
+                <a
+                    href="/layanan/delete/{{ $service->id }}"
+                    onclick="return confirm('Yakin hapus layanan?')"
+                    style="
+                        background:red;
+                        color:white;
+                        padding:8px 14px;
+                        border-radius:8px;
+                        text-decoration:none;
+                    "
+                >
+                    Delete
+                </a>
 
-</td>
+            </td>
 
         </tr>
 
@@ -118,6 +80,4 @@
     </table>
 
 </div>
-
-</body>
-</html>
+@endsection

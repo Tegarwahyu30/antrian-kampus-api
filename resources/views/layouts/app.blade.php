@@ -111,6 +111,9 @@
         Data Layanan
     </a>
 
+    <!-- Tombol Logout ditaruh sejajar di sini tanpa bungkus tag nav -->
+    <a href="{{ route('logout') }}" onclick="return confirm('Yakin ingin keluar?')">Logout</a>
+
 </div>
 
 <div class="container">

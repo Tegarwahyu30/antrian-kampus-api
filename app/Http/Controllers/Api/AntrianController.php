@@ -21,29 +21,53 @@ class AntrianController extends Controller
 
     // POST buat antrian
     public function store(Request $request)
-    {
-        $today = date('Y-m-d');
+{
+    $today = date('Y-m-d');
 
-        $count = Antrian::where('service_id', $request->service_id)
-            ->where('queue_date', $today)
-            ->count();
+    $serviceId = $request->service_id ?? 1;
 
-        $queueNumber = 'A' . str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+    $count = Antrian::where(
+        'service_id',
+        $serviceId
+    )->count();
 
-        $antrian = Antrian::create([
-            'user_id' => 1,
-            'service_id' => $request->service_id,
-            'queue_number' => $queueNumber,
-            'queue_date' => $today,
-            'status' => 'waiting'
-        ]);
+    $queueNumber =
+        'A' .
+        str_pad(
+            $count + 1,
+            3,
+            '0',
+            STR_PAD_LEFT
+        );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Antrian berhasil dibuat',
-            'data' => $antrian
-        ]);
-    }
+    $antrian = Antrian::create([
+
+        'nama' => $request->nama,
+
+        'nim' => $request->nim,
+
+        'keperluan' => $request->keperluan,
+
+        'service_id' => $serviceId,
+
+        'queue_number' => $queueNumber,
+
+        'queue_date' => $today,
+
+        'status' => 'waiting'
+
+    ]);
+
+    return response()->json([
+
+        'success' => true,
+
+        'message' => 'Antrian berhasil dibuat',
+
+        'data' => $antrian
+
+    ]);
+}
     // ✅ SHOW (HARUS DI LUAR STORE)
     public function show($id)
     {

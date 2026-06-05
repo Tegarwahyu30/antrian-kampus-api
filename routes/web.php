@@ -1,330 +1,216 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\ServiceController;
 use App\Models\Antrian;
 use App\Models\Service;
 use Illuminate\Http\Request;
 
-Route::get('/', function () {
+// ==========================================
+// HALAMAN YANG BISA DIAKSES TANPA LOGIN (GUEST)
+// ==========================================
+Route::middleware(['guest'])->group(function () {
+    
+    Route::get('/login', function () {
+        return view('login');
+    })->name('login');
 
-    $totalAntrian = Antrian::count();
+    Route::post('/login', function (Request $request) {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
 
-    $waiting = Antrian::where(
-        'status',
-        'waiting'
-    )->count();
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect('/');
+        }
 
-    $process = Antrian::where(
-        'status',
-        'process'
-    )->count();
-
-    $done = Antrian::where(
-        'status',
-        'done'
-    )->count();
-
-    $totalLayanan = Service::count();
-
-    // ANTRIAN TERBARU
-    $latestAntrians = Antrian::with('service')
-        ->latest()
-        ->take(5)
-        ->get();
-    // STATISTIK PER LAYANAN
-$serviceStats = Service::withCount('antrians')->get();
-
-    return view('dashboard', compact(
-        'totalAntrian',
-        'waiting',
-        'process',
-        'done',
-        'totalLayanan',
-        'latestAntrians',
-        'serviceStats'
-    ));
+        return back()->with('error', 'Email atau Password salah');
+    });
 
 });
-
-Route::get('/services', [ServiceController::class, 'index']);
-
-
-// ======================================================
-// ANTRIAN
-// ======================================================
-
-Route::get('/antrian', function (Request $request) {
-
-    $query = Antrian::with('service');
-
-    // SEARCH
-    if ($request->search) {
-
-        $query->where(function ($q) use ($request) {
-
-            $q->where(
-                'nama',
-                'like',
-                '%' . $request->search . '%'
-            )
-
-            ->orWhere(
-                'nim',
-                'like',
-                '%' . $request->search . '%'
-            )
-
-            ->orWhere(
-                'queue_number',
-                'like',
-                '%' . $request->search . '%'
-            );
-
-        });
-
-    }
-
-    // FILTER LAYANAN
-    if ($request->service_id) {
-
-        $query->where(
-            'service_id',
-            $request->service_id
-        );
-
-    }
-
-    // FILTER STATUS
-    if ($request->status) {
-
-        $query->where(
-            'status',
-            $request->status
-        );
-
-    }
-
-    $antrians = $query
-        ->latest()
-        ->get();
-
-    $services = Service::all();
-
-    return view(
-        'antrian.index',
-        compact('antrians', 'services')
-    );
-
-});
-
-Route::get('/antrian/create', function () {
-
-    $services = Service::all();
-
-    return view(
-        'antrian.create',
-        compact('services')
-    );
-
-});
-
-Route::post('/antrian/store', function (Request $request) {
-
-    // AMBIL DATA LAYANAN
-    $service = Service::findOrFail(
-        $request->service_id
-    );
-
-    // PREFIX DARI KODE LAYANAN
-    $prefix = $service->service_code;
-
-    // HITUNG TOTAL ANTRIAN PER LAYANAN
-    $totalQueue = Antrian::where(
-        'service_id',
-        $service->id
-    )->count() + 1;
-
-    // FORMAT NOMOR ANTRIAN
-    $queueNumber =
-        $prefix .
-        str_pad($totalQueue, 4, '0', STR_PAD_LEFT);
-
-    // SIMPAN DATA
-    Antrian::create([
-
-        'nama' => $request->nama,
-
-        'nim' => $request->nim,
-
-        'keperluan' => $request->keperluan,
-
-        'service_id' => $request->service_id,
-
-        'queue_number' => $queueNumber,
-
-        'queue_date' => $request->queue_date,
-
-        'status' => $request->status,
-
-    ]);
-
-    return redirect('/antrian');
-
-});
-
-Route::get('/antrian/edit/{id}', function ($id) {
-
-    $antrian = Antrian::findOrFail($id);
-
-    $services = Service::all();
-
-    return view(
-        'antrian.edit',
-        compact('antrian', 'services')
-    );
-
-});
-
-Route::post('/antrian/update/{id}', function (
-    Request $request,
-    $id
-) {
-
-    $antrian = Antrian::findOrFail($id);
-
-    $antrian->update([
-
-        'nama' => $request->nama,
-
-        'nim' => $request->nim,
-
-        'keperluan' => $request->keperluan,
-
-        'service_id' => $request->service_id,
-
-        'queue_date' => $request->queue_date,
-
-        'status' => $request->status,
-
-    ]);
-
-    return redirect('/antrian');
-
-});
-
 
 // ==========================================
-// UPDATE STATUS OTOMATIS
+// HALAMAN YANG WAJIB LOGIN (AUTH)
 // ==========================================
+Route::middleware(['auth'])->group(function () {
 
-Route::get('/antrian/status/{id}', function ($id) {
+    // LOGOUT
+    Route::get('/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/login');
+    })->name('logout');
 
-    $antrian = Antrian::findOrFail($id);
+    // DASHBOARD
+    Route::get('/', function () {
+        $totalAntrian = Antrian::count();
+        $waiting = Antrian::where('status', 'waiting')->count();
+        $process = Antrian::where('status', 'process')->count();
+        $done = Antrian::where('status', 'done')->count();
+        $totalLayanan = Service::count();
 
-    // WAITING -> PROCESS
-    if ($antrian->status == 'waiting') {
+        // ANTRIAN TERBARU
+        $latestAntrians = Antrian::with('service')
+            ->latest()
+            ->take(5)
+            ->get();
+            
+        // STATISTIK PER LAYANAN
+        $serviceStats = Service::withCount('antrians')->get();
 
-        $antrian->status = 'process';
+        return view('dashboard', compact(
+            'totalAntrian',
+            'waiting',
+            'process',
+            'done',
+            'totalLayanan',
+            'latestAntrians',
+            'serviceStats'
+        ));
+    });
 
-    }
+    Route::get('/services', [ServiceController::class, 'index']);
 
-    // PROCESS -> DONE
-    elseif ($antrian->status == 'process') {
+    // ======================================================
+    // ANTRIAN
+    // ======================================================
+    Route::get('/antrian', function (Request $request) {
+        $query = Antrian::with('service');
 
-        $antrian->status = 'done';
+        // SEARCH
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->search . '%')
+                  ->orWhere('nim', 'like', '%' . $request->search . '%')
+                  ->orWhere('queue_number', 'like', '%' . $request->search . '%');
+            });
+        }
 
-    }
+        // FILTER LAYANAN
+        if ($request->service_id) {
+            $query->where('service_id', $request->service_id);
+        }
 
-    $antrian->save();
+        // FILTER STATUS
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
 
-    return redirect('/antrian');
+        $antrians = $query->latest()->get();
+        $services = Service::all();
 
-});
+        return view('antrian.index', compact('antrians', 'services'));
+    });
 
+    Route::get('/antrian/create', function () {
+        $services = Service::all();
+        return view('antrian.create', compact('services'));
+    });
 
-Route::get('/antrian/delete/{id}', function ($id) {
+    Route::post('/antrian/store', function (Request $request) {
+        $service = Service::findOrFail($request->service_id);
+        $prefix = $service->service_code;
+        $totalQueue = Antrian::where('service_id', $service->id)->count() + 1;
+        $queueNumber = $prefix . str_pad($totalQueue, 4, '0', STR_PAD_LEFT);
 
-    $antrian = Antrian::findOrFail($id);
+        Antrian::create([
+            'nama' => $request->nama,
+            'nim' => $request->nim,
+            'keperluan' => $request->keperluan,
+            'service_id' => $request->service_id,
+            'queue_number' => $queueNumber,
+            'queue_date' => $request->queue_date,
+            'status' => $request->status,
+        ]);
 
-    $antrian->delete();
+        return redirect('/antrian');
+    });
 
-    return redirect('/antrian');
+    Route::get('/antrian/edit/{id}', function ($id) {
+        $antrian = Antrian::findOrFail($id);
+        $services = Service::all();
+        return view('antrian.edit', compact('antrian', 'services'));
+    });
 
-});
+    Route::post('/antrian/update/{id}', function (Request $request, $id) {
+        $antrian = Antrian::findOrFail($id);
+        $antrian->update([
+            'nama' => $request->nama,
+            'nim' => $request->nim,
+            'keperluan' => $request->keperluan,
+            'service_id' => $request->service_id,
+            'queue_date' => $request->queue_date,
+            'status' => $request->status,
+        ]);
 
+        return redirect('/antrian');
+    });
 
-// ======================================================
-// LAYANAN
-// ======================================================
+    // UPDATE STATUS OTOMATIS
+    Route::get('/antrian/status/{id}', function ($id) {
+        $antrian = Antrian::findOrFail($id);
+        if ($antrian->status == 'waiting') {
+            $antrian->status = 'process';
+        } elseif ($antrian->status == 'process') {
+            $antrian->status = 'done';
+        }
+        $antrian->save();
 
-Route::get('/layanan', function () {
+        return redirect('/antrian');
+    });
 
-    $services = Service::latest()->get();
+    Route::get('/antrian/delete/{id}', function ($id) {
+        $antrian = Antrian::findOrFail($id);
+        $antrian->delete();
+        return redirect('/antrian');
+    });
 
-    return view('layanan.index', compact('services'));
+    // ======================================================
+    // LAYANAN
+    // ======================================================
+    Route::get('/layanan', function () {
+        $services = Service::latest()->get();
+        return view('layanan.index', compact('services'));
+    });
 
-});
+    Route::get('/layanan/create', function () {
+        return view('layanan.create');
+    });
 
-Route::get('/layanan/create', function () {
+    Route::post('/layanan/store', function (Request $request) {
+        $totalService = Service::count();
+        $serviceCode = chr(65 + $totalService);
 
-    return view('layanan.create');
+        Service::create([
+            'service_name' => $request->service_name,
+            'service_code' => $serviceCode
+        ]);
 
-});
+        return redirect('/layanan');
+    });
 
-Route::post('/layanan/store', function (
-    Request $request
-) {
+    Route::get('/layanan/edit/{id}', function ($id) {
+        $service = Service::findOrFail($id);
+        return view('layanan.edit', compact('service'));
+    });
 
-    // HITUNG JUMLAH LAYANAN
-    $totalService = Service::count();
+    Route::post('/layanan/update/{id}', function (Request $request, $id) {
+        $service = Service::findOrFail($id);
+        $service->update([
+            'service_name' => $request->service_name
+        ]);
 
-    // AUTO HURUF A B C D
-    $serviceCode = chr(65 + $totalService);
+        return redirect('/layanan');
+    });
 
-    Service::create([
-
-        'service_name' => $request->service_name,
-
-        'service_code' => $serviceCode
-
-    ]);
-
-    return redirect('/layanan');
-
-});
-
-Route::get('/layanan/edit/{id}', function ($id) {
-
-    $service = Service::findOrFail($id);
-
-    return view('layanan.edit', compact('service'));
-
-});
-
-Route::post('/layanan/update/{id}', function (
-    Request $request,
-    $id
-) {
-
-    $service = Service::findOrFail($id);
-
-    $service->update([
-
-        'service_name' => $request->service_name
-
-    ]);
-
-    return redirect('/layanan');
-
-});
-
-Route::get('/layanan/delete/{id}', function ($id) {
-
-    $service = Service::findOrFail($id);
-
-    $service->delete();
-
-    return redirect('/layanan');
+    Route::get('/layanan/delete/{id}', function ($id) {
+        $service = Service::findOrFail($id);
+        $service->delete();
+        return redirect('/layanan');
+    });
 
 });
