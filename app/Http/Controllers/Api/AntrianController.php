@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Antrian;
+use App\Models\Service;
 
 class AntrianController extends Controller
 {
@@ -24,7 +25,11 @@ class AntrianController extends Controller
 {
     $today = date('Y-m-d');
 
-    $serviceId = $request->service_id ?? 1;
+    $serviceId = $request->service_id;
+
+    $service = Service::findOrFail($serviceId);
+
+    $prefix = $service->service_code;
 
     $count = Antrian::where(
         'service_id',
@@ -32,7 +37,7 @@ class AntrianController extends Controller
     )->count();
 
     $queueNumber =
-        'A' .
+        $prefix .
         str_pad(
             $count + 1,
             3,
