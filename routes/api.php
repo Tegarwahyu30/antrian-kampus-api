@@ -20,8 +20,18 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // ANTRIAN (CRUD LENGKAP)
-Route::get('/antrians', [AntrianController::class, 'index']);
-Route::post('/antrians', [AntrianController::class, 'store']);
-Route::get('/antrians/{id}', [AntrianController::class, 'show']);
-Route::put('/antrians/{id}', [AntrianController::class, 'update']);
-Route::delete('/antrians/{id}', [AntrianController::class, 'destroy']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/antrians', [AntrianController::class, 'index']);
+
+    Route::post('/antrians', [AntrianController::class, 'store']);
+
+    Route::get('/antrians/{id}', [AntrianController::class, 'show']);
+
+    Route::put('/antrians/{id}', [AntrianController::class, 'update']);
+
+    Route::delete('/antrians/{id}', [AntrianController::class, 'destroy']);
+
+    Route::get('/my-antrian', [AntrianController::class, 'myAntrian']);
+
+});
